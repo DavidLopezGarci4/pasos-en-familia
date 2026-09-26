@@ -1,0 +1,23 @@
+{
+  "appName": "Pasos en Familia",
+  "version": "0.1.0",
+  "description": "Hábitos familiares y gamificación en tiempo real",
+  "nodes": [
+    { "id": "nextjs", "label": "Next.js 15", "version": "15.5", "role": "Full-Stack SSR y Server Actions", "category": "server_web_apps", "icon": "Layers", "healthCheck": "server_runtime" },
+    { "id": "react", "label": "React 19", "version": "19.2", "role": "UI Declarativo y Concurrente", "category": "local_web_apps", "icon": "Atom", "healthCheck": "react_runtime" },
+    { "id": "storage", "label": "Almacén ACID", "version": "FS v1", "role": "Persistencia Atómica con Rollback", "category": "local_persistence", "icon": "Database", "healthCheck": "storage" },
+    { "id": "realtime", "label": "Eventos SSE", "version": "SSE", "role": "Canal reactivo Server-Sent Events", "category": "server_web_apps", "icon": "Radio", "healthCheck": "realtime_sse" },
+    { "id": "pixel_pet", "label": "Pixel Pet", "version": "Engine v2", "role": "Canvas 2D y Tamagotchi", "category": "graphics_multimedia", "icon": "Gamepad", "healthCheck": "pet_engine" },
+    { "id": "pwa", "label": "PWA & Offline", "version": "SW v1", "role": "Service Worker y caché web", "category": "mobile_apps", "icon": "Smartphone", "healthCheck": "pwa_service_worker" },
+    { "id": "design_system", "label": "Design System", "version": "CSS3", "role": "Tokens semánticos adaptativos", "category": "graphics_multimedia", "icon": "Palette", "healthCheck": "static" }
+  ],
+  "links": [
+    { "source": "nextjs", "target": "react", "relation": "renderiza" },
+    { "source": "nextjs", "target": "storage", "relation": "persiste" },
+    { "source": "nextjs", "target": "realtime", "relation": "emite" },
+    { "source": "realtime", "target": "react", "relation": "sincroniza" },
+    { "source": "react", "target": "pixel_pet", "relation": "anima" },
+    { "source": "react", "target": "pwa", "relation": "cachea" },
+    { "source": "react", "target": "design_system", "relation": "aplica" }
+  ]
+}

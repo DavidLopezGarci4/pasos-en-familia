@@ -1,0 +1,33 @@
+{
+  "name": "pasos-en-familia",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "test": "playwright test",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=18.17.0"
+  },
+  "dependencies": {
+    "next": "15.5.25",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^24.13.4",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "15.5.25",
+    "typescript": "^5"
+  },
+  "overrides": {
+    "postcss": "8.5.28"
+  }
+}
