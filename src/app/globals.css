@@ -122,3 +122,220 @@
 .item-details strong{font-size:13px;color:#ffffff}
 .item-bonus{font-size:10px;color:#a8e6b8}
 .item-price{font-size:11px;color:#ffd700;font-weight:700;margin-top:2px}
+
+/* ==========================================================================
+   2026 Visual Excellence: View Transitions API
+   ========================================================================== */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root) {
+  animation: 240ms cubic-bezier(0.4, 0, 0.2, 1) both fade-scale-out;
+}
+::view-transition-new(root) {
+  animation: 240ms cubic-bezier(0.4, 0, 0.2, 1) both fade-scale-in;
+}
+
+@keyframes fade-scale-out {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.992); }
+}
+@keyframes fade-scale-in {
+  from { opacity: 0; transform: scale(1.008); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* ==========================================================================
+   2026 Visual Excellence: Themes (Dark Forest & High-Contrast WCAG AAA)
+   ========================================================================== */
+[data-theme="dark"] {
+  --paper: #121c17;
+  --white: #1a2922;
+  --ink: #e4eee9;
+  --body: #a2b7ac;
+  --muted: #728c7f;
+  --line: #263e33;
+  --green: #59a779;
+  --sage: #1e332a;
+  --coral: #df886c;
+  --peach: #2f251c;
+}
+
+[data-theme="dark"] .sidebar,
+[data-theme="dark"] .topbar,
+[data-theme="dark"] .panel,
+[data-theme="dark"] .child-card,
+[data-theme="dark"] .reward-card,
+[data-theme="dark"] .advice-card,
+[data-theme="dark"] .editor,
+[data-theme="dark"] .stats>div,
+[data-theme="dark"] .stats>button,
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background: var(--white);
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+[data-theme="dark"] .secondary {
+  background: var(--white);
+  border-color: var(--line);
+  color: var(--ink);
+}
+[data-theme="dark"] .secondary:hover {
+  background: var(--sage);
+}
+
+[data-theme="dark"] .filters button {
+  background: var(--white);
+  border-color: var(--line);
+  color: var(--ink);
+}
+[data-theme="dark"] .filters button.selected {
+  background: var(--sage);
+  color: var(--green);
+  border-color: var(--green);
+}
+
+[data-theme="dark"] .family-label {
+  background: var(--sage);
+  border-color: var(--line);
+}
+[data-theme="dark"] .family-monogram {
+  background: var(--line);
+  color: var(--ink);
+}
+[data-theme="dark"] .brand-mark {
+  background: var(--sage);
+  color: var(--green);
+}
+
+[data-theme="dark"] .hero {
+  background: var(--sage);
+  border-color: var(--line);
+}
+[data-theme="dark"] .hero p {
+  color: var(--body);
+}
+
+[data-theme="dark"] .note-card {
+  background: #251f16;
+  border-color: #3e3322;
+}
+[data-theme="dark"] .note-card h3 {
+  color: #ebd1aa;
+}
+[data-theme="dark"] .note-card p {
+  color: #bda98f;
+}
+[data-theme="dark"] .note-doodle {
+  color: #382d1c;
+}
+
+[data-theme="dark"] .task-check {
+  background: var(--sage);
+  border-color: var(--line);
+}
+[data-theme="dark"] .task-check.done {
+  background: #173b24;
+  color: #6ee7b7;
+}
+
+[data-theme="dark"] .history-row {
+  border-color: var(--line);
+}
+
+[data-theme="dark"] .advice-intro {
+  background: var(--sage);
+  border-color: var(--line);
+}
+[data-theme="dark"] .advice-intro p {
+  color: var(--body);
+}
+
+[data-theme="dark"] .sidebar nav button {
+  color: var(--body);
+}
+[data-theme="dark"] .sidebar nav button:hover {
+  background: var(--sage);
+  color: var(--ink);
+}
+[data-theme="dark"] .sidebar nav button.active {
+  background: var(--sage);
+  color: var(--green);
+}
+
+[data-theme="dark"] .balance-banner {
+  background: var(--sage);
+  border-color: var(--line);
+}
+[data-theme="dark"] .child-bottom {
+  border-color: var(--line);
+}
+[data-theme="dark"] .pet-choice {
+  background: var(--white);
+  border-color: var(--line);
+}
+
+/* High Contrast (WCAG AAA) */
+[data-theme="high-contrast"] {
+  --paper: #000000;
+  --white: #0a0a0a;
+  --ink: #ffffff;
+  --body: #f0f0f0;
+  --muted: #d0d0d0;
+  --line: #ffffff;
+  --green: #00ff66;
+  --sage: #141414;
+  --coral: #ff5533;
+  --peach: #222222;
+}
+
+[data-theme="high-contrast"] .sidebar,
+[data-theme="high-contrast"] .topbar,
+[data-theme="high-contrast"] .panel,
+[data-theme="high-contrast"] .child-card,
+[data-theme="high-contrast"] .reward-card,
+[data-theme="high-contrast"] .advice-card,
+[data-theme="high-contrast"] .editor,
+[data-theme="high-contrast"] .stats>div,
+[data-theme="high-contrast"] .stats>button,
+[data-theme="high-contrast"] .hero,
+[data-theme="high-contrast"] .note-card,
+[data-theme="high-contrast"] .advice-intro,
+[data-theme="high-contrast"] .balance-banner {
+  background: #0a0a0a !important;
+  color: #ffffff !important;
+  border: 2px solid #ffffff !important;
+}
+
+[data-theme="high-contrast"] input,
+[data-theme="high-contrast"] select,
+[data-theme="high-contrast"] textarea,
+[data-theme="high-contrast"] .secondary,
+[data-theme="high-contrast"] .filters button {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: 2px solid #ffffff !important;
+}
+
+[data-theme="high-contrast"] .primary {
+  background: #00ff66 !important;
+  color: #000000 !important;
+  border: 2px solid #00ff66 !important;
+  font-weight: 800 !important;
+}
+
+[data-theme="high-contrast"] a {
+  text-decoration: underline !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="high-contrast"] p,
+[data-theme="high-contrast"] small,
+[data-theme="high-contrast"] span {
+  color: #f3f4f6 !important;
+}
+

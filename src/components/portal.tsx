@@ -35,7 +35,8 @@ import { RoutineRunner } from "./routine-runner";
 import { FamilyProjectView } from "./family-project-view";
 import { FAQView } from "./faq-view";
 import { isSoundMuted, toggleSoundMuted, playTap, playTaskDone } from "@/lib/sound";
-import { hapticSuccess, hapticTap } from "@/lib/haptics";
+import { isHapticsEnabled, toggleHaptics, setHapticsEnabled, hapticSuccess, hapticTap } from "@/lib/haptics";
+import { getStoredTheme, applyTheme, cycleTheme, type AppTheme } from "@/lib/theme";
 
 type View =
   | "home"
@@ -1482,7 +1483,23 @@ function Advice({ parent }: { parent: boolean }) {
   );
 }
 
-function Settings({ snapshot }: { snapshot: Snapshot }) {
+function Settings({
+  snapshot,
+  theme,
+  setTheme,
+  hapticsOn,
+  setHapticsOn,
+  soundMuted,
+  setSoundMuted,
+}: {
+  snapshot: Snapshot;
+  theme: AppTheme;
+  setTheme: (t: AppTheme) => void;
+  hapticsOn: boolean;
+  setHapticsOn: (h: boolean) => void;
+  soundMuted: boolean;
+  setSoundMuted: (s: boolean) => void;
+}) {
   const { family, members } = snapshot;
   const [showTechStack, setShowTechStack] = useState(false);
   return (
@@ -1664,6 +1681,93 @@ function Settings({ snapshot }: { snapshot: Snapshot }) {
         </section>
 
         <section className="panel" style={{ marginTop: 22 }}>
+          <span className="eyebrow">EXPERIENCIA Y ACCESIBILIDAD 2026</span>
+          <h3>Personalización sensorial y tema</h3>
+          <p className="muted" style={{ marginBottom: 16 }}>
+            Configura la apariencia visual de la app (compatible con modo oscuro y WCAG AAA), así como los efectos de respuesta háptica y sonido retro.
+          </p>
+          
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div>
+              <label style={{ marginBottom: 6, fontWeight: 650 }}>Tema visual del sistema:</label>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+                <button
+                  type="button"
+                  className={`button small ${theme === "light" ? "primary" : "secondary"}`}
+                  onClick={() => {
+                    applyTheme("light");
+                    setTheme("light");
+                    hapticTap();
+                  }}
+                  style={{ justifyContent: "center" }}
+                >
+                  ☀️ Claro
+                </button>
+                <button
+                  type="button"
+                  className={`button small ${theme === "dark" ? "primary" : "secondary"}`}
+                  onClick={() => {
+                    applyTheme("dark");
+                    setTheme("dark");
+                    hapticTap();
+                  }}
+                  style={{ justifyContent: "center" }}
+                >
+                  🌙 Bosque
+                </button>
+                <button
+                  type="button"
+                  className={`button small ${theme === "high-contrast" ? "primary" : "secondary"}`}
+                  onClick={() => {
+                    applyTheme("high-contrast");
+                    setTheme("high-contrast");
+                    hapticTap();
+                  }}
+                  style={{ justifyContent: "center" }}
+                >
+                  👁️ WCAG AAA
+                </button>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px", border: "1px solid var(--line)", borderRadius: 10 }}>
+              <div>
+                <strong style={{ fontSize: 13, color: "var(--ink)" }}>Vibración Háptica</strong>
+                <div style={{ fontSize: 11, color: "var(--muted)" }}>Respuesta táctil suave en botones, tareas y recompensas</div>
+              </div>
+              <button
+                type="button"
+                className={`button small ${hapticsOn ? "primary" : "secondary"}`}
+                onClick={() => {
+                  const next = toggleHaptics();
+                  setHapticsOn(next);
+                }}
+              >
+                {hapticsOn ? "📳 Activada" : "📵 Silenciada"}
+              </button>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px", border: "1px solid var(--line)", borderRadius: 10 }}>
+              <div>
+                <strong style={{ fontSize: 13, color: "var(--ink)" }}>Efectos de Sonido 8-bits</strong>
+                <div style={{ fontSize: 11, color: "var(--muted)" }}>Sonidos retro arcade para la mascota y celebración de logros</div>
+              </div>
+              <button
+                type="button"
+                className={`button small ${!soundMuted ? "primary" : "secondary"}`}
+                onClick={() => {
+                  const next = toggleSoundMuted();
+                  setSoundMuted(next);
+                  if (!next) playTap();
+                }}
+              >
+                {!soundMuted ? "🔊 Activado" : "🔇 Silenciado"}
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section className="panel" style={{ marginTop: 22 }}>
           <span className="eyebrow">TRANSPARENCIA TÉCNICA</span>
           <h3>Arquitectura y Tecnologías</h3>
           <p className="muted" style={{ marginBottom: 16 }}>
@@ -1701,8 +1805,17 @@ export function Portal({ snapshot }: { snapshot: Snapshot }) {
   const [view, setView] = useState<View>("home");
   const [activeRoutineChild, setActiveRoutineChild] = useState<Child | null>(null);
   const [soundMuted, setSoundMuted] = useState(isSoundMuted());
+  const [hapticsOn, setHapticsOn] = useState(true);
+  const [theme, setTheme] = useState<AppTheme>("light");
   const [state, action, pending] = useActionState(mutate, {});
   const parent = snapshot.user.role === "parent";
+
+  useEffect(() => {
+    setHapticsOn(isHapticsEnabled());
+    const initialTheme = getStoredTheme();
+    setTheme(initialTheme);
+    applyTheme(initialTheme);
+  }, []);
   const nav: { view: View; label: string; icon: string }[] = [
     {
       view: "home",
@@ -1785,9 +1898,17 @@ export function Portal({ snapshot }: { snapshot: Snapshot }) {
     settings: "Personaliza el funcionamiento del sistema familiar.",
   };
   const go = (target: View) => {
-    setView(target);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (typeof document !== "undefined" && "startViewTransition" in document) {
+      (document as unknown as { startViewTransition: (cb: () => void) => void }).startViewTransition(() => {
+        setView(target);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    } else {
+      setView(target);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
+
   return (
     <FormContext value={{ action, pending }}>
       <div className="app-shell">
@@ -1862,7 +1983,58 @@ export function Portal({ snapshot }: { snapshot: Snapshot }) {
               <span className="crumb-divider">/</span>
               <strong>{nav.find((n) => n.view === view)?.label}</strong>
             </span>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <button
+                type="button"
+                onClick={() => {
+                  const nextTheme = cycleTheme(theme);
+                  setTheme(nextTheme);
+                  hapticTap();
+                }}
+                style={{
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid var(--line)",
+                  borderRadius: 8,
+                  padding: "5px 9px",
+                  color: "var(--ink)",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 5,
+                  fontSize: 11,
+                  fontWeight: 650,
+                }}
+                title={`Tema actual: ${theme}. Clic para alternar (Claro / Bosque / Contraste)`}
+              >
+                <span>{theme === "light" ? "☀️" : theme === "dark" ? "🌙" : "👁️"}</span>
+                <span>{theme === "light" ? "Claro" : theme === "dark" ? "Oscuro" : "Contraste"}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const next = toggleHaptics();
+                  setHapticsOn(next);
+                }}
+                style={{
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid var(--line)",
+                  borderRadius: 8,
+                  padding: "5px 9px",
+                  color: hapticsOn ? "var(--green)" : "var(--muted)",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 5,
+                  fontSize: 11,
+                  fontWeight: 650,
+                }}
+                title={hapticsOn ? "Vibración háptica activa (Clic para silenciar)" : "Vibración háptica silenciada (Clic para activar)"}
+              >
+                <span>{hapticsOn ? "📳" : "📵"}</span>
+                <span>{hapticsOn ? "Háptica" : "Mute Vib"}</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => {
@@ -1872,7 +2044,7 @@ export function Portal({ snapshot }: { snapshot: Snapshot }) {
                 }}
                 style={{
                   background: "rgba(255,255,255,0.06)",
-                  border: "1px solid var(--edge)",
+                  border: "1px solid var(--line)",
                   borderRadius: 8,
                   padding: "5px 9px",
                   color: soundMuted ? "var(--muted)" : "var(--green)",
@@ -1949,8 +2121,17 @@ export function Portal({ snapshot }: { snapshot: Snapshot }) {
             {view === "requests" && <Requests snapshot={snapshot} />}
             {view === "family" && parent && <FamilyView snapshot={snapshot} />}
             {view === "advice" && <Advice parent={parent} />}
-            {view === "faq" && <FAQView onNavigate={(route) => go(route as View)} />}
-            {view === "settings" && parent && <Settings snapshot={snapshot} />}
+            {view === "settings" && parent && (
+              <Settings
+                snapshot={snapshot}
+                theme={theme}
+                setTheme={setTheme}
+                hapticsOn={hapticsOn}
+                setHapticsOn={setHapticsOn}
+                soundMuted={soundMuted}
+                setSoundMuted={setSoundMuted}
+              />
+            )}
             <footer className="page-footer">
               <span>
                 pasos<span className="brand-dot">.</span>
