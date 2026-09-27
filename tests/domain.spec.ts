@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { addPoints, reviewRequest, submitTask, publicFamily, editTask, deleteTask, editReward, deleteReward, feedPet, playPet, buyPetItem, togglePetAccessory } from "../src/lib/domain";
+import { addPoints, reviewRequest, submitTask, publicFamily, editTask, deleteTask, editReward, deleteReward, feedPet, playPet, buyPetItem, togglePetAccessory, contributeToProject, createFamilyProject } from "../src/lib/domain";
 import { dayKey, taskRequest, type Family, type Member } from "../src/lib/model";
 
 const parent: Member = { id: "p1", name: "Adulto", role: "parent" };
@@ -136,5 +136,43 @@ test("interacciones con la mascota virtual (alimentar, jugar, comprar, equipar a
   togglePetAccessory(child, "crown");
   expect(child.pet!.equippedAccessories).not.toContain("crown");
 });
+
+test("los proyectos familiares cooperativos acumulan puntos colectivos al aprobar tareas", () => {
+  const family = fixture();
+  // Initially no projects, contributeToProject initializes default treehouse project
+  const finished = contributeToProject(family, 10, "c1");
+  expect(finished).toBe(false);
+  expect(family.projects).toBeDefined();
+  expect(family.projects!.length).toBe(1);
+  const proj = family.projects![0];
+  expect(proj.title).toContain("Cabaña del Árbol");
+  expect(proj.currentPoints).toBe(10);
+  expect(proj.contributions).toHaveLength(1);
+  expect(proj.contributions[0].memberId).toBe("c1");
+  expect(proj.contributions[0].points).toBe(10);
+
+  // Submitting and reviewing a task adds to project automatically
+  submitTask(family, "t1", { id: "c1", name: "Ana", role: "child" }, false);
+  const req = family.requests[0];
+  reviewRequest(family, req.id, "approved", "Genial", parent);
+  expect(proj.currentPoints).toBe(15);
+  expect(proj.contributions[0].points).toBe(15);
+
+  // Parent can create new customized project
+  const custom = createFamilyProject(family, {
+    title: "Misión Parque de Atracciones",
+    description: "Conseguir entradas para todos",
+    rewardTitle: "Viaje al parque",
+    targetPoints: 20,
+  }, parent);
+  expect(custom.active).toBe(true);
+  expect(proj.active).toBe(false);
+
+  // Reaching target completes the project
+  contributeToProject(family, 25, "c2");
+  expect(custom.currentPoints).toBe(20);
+  expect(custom.completedAt).toBeDefined();
+});
+
 
 

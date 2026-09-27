@@ -5,6 +5,8 @@ import { ActionForm } from "./portal-form";
 import { petCatalog, petStageLabels, petItemsCatalog, type Child, type Snapshot } from "@/lib/model";
 import { PixelPet } from "./pixel-pet";
 import { Icon } from "./icon";
+import { playPetFeed, playTap, playLevelUp } from "@/lib/sound";
+import { hapticSuccess, hapticTap } from "@/lib/haptics";
 
 export function PetConsole({ child }: { child: Child }) {
   const [activeTab, setActiveTab] = useState<"play" | "feed" | "shop">("play");
@@ -51,24 +53,39 @@ export function PetConsole({ child }: { child: Child }) {
   const unlockedIds = pet.unlockedItems || [];
   const equippedItems = petItemsCatalog.filter((i) => equippedIds.includes(i.id));
 
+  // Nighttime sleep detection (21:00 to 08:00)
+  const currentHour = new Date().getHours();
+  const isSleepingTime = currentHour >= 21 || currentHour < 8;
+
   // Determine pet mood & speech bubble text
   let moodEmoji = "❤️";
   let moodText = "¡Me siento genial contigo!";
-  if (pet.stage === "egg") {
+  let petMood: "happy" | "sleepy" | "celebrating" | "normal" = "happy";
+
+  if (isSleepingTime) {
+    moodEmoji = "💤";
+    moodText = "Zzz... Tu mascota descansa hasta la mañana. ¡Recargando sueños!";
+    petMood = "sleepy";
+  } else if (pet.stage === "egg") {
     moodEmoji = "🥚";
     moodText = "¡Completa tareas diarias para ayudarme a eclosionar a Bebé (25 XP)!";
+    petMood = "normal";
   } else if (energy <= 0) {
     moodEmoji = "😴";
     moodText = "¡Necesito energía! Completa tareas para jugar juntos ⚡";
+    petMood = "sleepy";
   } else if (happiness < 30 || fullness < 30) {
     moodEmoji = "💤";
     moodText = "Tengo un poco de hambre y sueño...";
+    petMood = "normal";
   } else if (happiness >= 90 && fullness >= 90) {
     moodEmoji = "🎉";
     moodText = "¡Estoy al máximo de energía y súper feliz!";
+    petMood = "celebrating";
   } else if (fullness < 60) {
     moodEmoji = "😋";
     moodText = "¡Una galletita no estaría nada mal!";
+    petMood = "happy";
   }
 
   const foodItems = petItemsCatalog.filter((i) => i.category === "food");
@@ -98,7 +115,7 @@ export function PetConsole({ child }: { child: Child }) {
 
           {/* Pet Main Avatar 8-bit Sprite */}
           <div className="pet-character-avatar" key={happiness + fullness + energy + equippedIds.length + pet.stage}>
-            <PixelPet type={pet.type} stage={pet.stage} accessories={equippedIds} size={140} />
+            <PixelPet type={pet.type} stage={pet.stage} accessories={equippedIds} mood={petMood} size={140} />
           </div>
 
           {/* Speech Bubble */}
@@ -143,19 +160,31 @@ export function PetConsole({ child }: { child: Child }) {
       <div className="tamagotchi-tabs">
         <button
           className={`tamagotchi-tab ${activeTab === "play" ? "active" : ""}`}
-          onClick={() => setActiveTab("play")}
+          onClick={() => {
+            hapticTap();
+            playTap();
+            setActiveTab("play");
+          }}
         >
           🎮 Jugar (⚡{energy})
         </button>
         <button
           className={`tamagotchi-tab ${activeTab === "feed" ? "active" : ""}`}
-          onClick={() => setActiveTab("feed")}
+          onClick={() => {
+            hapticTap();
+            playTap();
+            setActiveTab("feed");
+          }}
         >
           🍎 Alimentar
         </button>
         <button
           className={`tamagotchi-tab ${activeTab === "shop" ? "active" : ""}`}
-          onClick={() => setActiveTab("shop")}
+          onClick={() => {
+            hapticTap();
+            playTap();
+            setActiveTab("shop");
+          }}
         >
           👑 Armario 8-Bits
         </button>
@@ -204,6 +233,12 @@ export function PetConsole({ child }: { child: Child }) {
                         type="submit"
                         className="button secondary small"
                         disabled={cannotAfford}
+                        onClick={() => {
+                          if (!cannotAfford) {
+                            hapticSuccess();
+                            playPetFeed();
+                          }
+                        }}
                       >
                         {cannotAfford ? "Faltan pts" : "Dar comida"}
                       </button>

@@ -31,16 +31,22 @@ import { useRealtimeSync } from "./use-realtime";
 import { FormContext, ActionForm } from "./portal-form";
 import { PetView } from "./pet-modal";
 import { PixelPet } from "./pixel-pet";
-
+import { RoutineRunner } from "./routine-runner";
+import { FamilyProjectView } from "./family-project-view";
+import { FAQView } from "./faq-view";
+import { isSoundMuted, toggleSoundMuted, playTap, playTaskDone } from "@/lib/sound";
+import { hapticSuccess, hapticTap } from "@/lib/haptics";
 
 type View =
   | "home"
   | "tasks"
+  | "project"
   | "rewards"
   | "requests"
   | "family"
   | "pet"
   | "advice"
+  | "faq"
   | "settings";
 
 function ChildSelect({ profiles }: { profiles: Child[] }) {
@@ -364,12 +370,13 @@ function QuestList({ family, parent }: { family: Family; parent: boolean }) {
 }
 
 function Dashboard({
-
   snapshot,
   go,
+  onStartRoutine,
 }: {
   snapshot: Snapshot;
   go: (view: View) => void;
+  onStartRoutine?: (child: Child) => void;
 }) {
   const { family, user, today } = snapshot;
   const parent = user.role === "parent";
@@ -462,6 +469,61 @@ function Dashboard({
           </div>
         </div>
       </section>
+      {family.children.length > 0 && onStartRoutine && (
+        <div
+          style={{
+            margin: "24px 0 16px 0",
+            padding: "16px 20px",
+            borderRadius: 16,
+            background: "linear-gradient(135deg, rgba(74, 222, 128, 0.12), rgba(56, 189, 248, 0.08))",
+            border: "1px solid rgba(74, 222, 128, 0.25)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+            boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <div
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 12,
+                background: "rgba(74, 222, 128, 0.2)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 22,
+                flexShrink: 0,
+              }}
+            >
+              ⏱️
+            </div>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <strong style={{ fontSize: 15, color: "var(--ink)" }}>Modo Rutina Guiada</strong>
+                <span className="pill green" style={{ fontSize: 10, padding: "2px 6px" }}>8-Bit Focus</span>
+              </div>
+              <p style={{ fontSize: 12, color: "var(--muted)", margin: "3px 0 0 0" }}>
+                Enfócate en un solo hábito a la vez con temporizador visual chiptune paso a paso.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="button primary"
+            style={{ whiteSpace: "nowrap", padding: "10px 18px", fontSize: 13 }}
+            onClick={() => {
+              hapticSuccess();
+              playTap();
+              onStartRoutine(parent ? family.children[0] : family.children.find(c => c.id === user.id) || family.children[0]);
+            }}
+          >
+            Iniciar ▶
+          </button>
+        </div>
+      )}
       <div className="section-heading">
         <div>
           <span className="eyebrow">
@@ -1637,6 +1699,8 @@ function Settings({ snapshot }: { snapshot: Snapshot }) {
 export function Portal({ snapshot }: { snapshot: Snapshot }) {
   useRealtimeSync();
   const [view, setView] = useState<View>("home");
+  const [activeRoutineChild, setActiveRoutineChild] = useState<Child | null>(null);
+  const [soundMuted, setSoundMuted] = useState(isSoundMuted());
   const [state, action, pending] = useActionState(mutate, {});
   const parent = snapshot.user.role === "parent";
   const nav: { view: View; label: string; icon: string }[] = [
@@ -1649,6 +1713,11 @@ export function Portal({ snapshot }: { snapshot: Snapshot }) {
       view: "tasks",
       label: parent ? "Tareas y hábitos" : "Mis tareas",
       icon: "tasks",
+    },
+    {
+      view: "project",
+      label: "Proyecto Familiar",
+      icon: "tree",
     },
     {
       view: "pet",
@@ -1669,6 +1738,11 @@ export function Portal({ snapshot }: { snapshot: Snapshot }) {
       label: parent ? "Educar en positivo" : "Ideas que me ayudan",
       icon: "book",
     },
+    {
+      view: "faq",
+      label: "Ayuda y FAQ",
+      icon: "book",
+    },
     ...(parent
       ? [
           {
@@ -1685,11 +1759,13 @@ export function Portal({ snapshot }: { snapshot: Snapshot }) {
   const title = {
     home: parent ? "Hoy crecemos juntos" : `¡Hola, ${snapshot.user.name}!`,
     tasks: parent ? "Tareas y hábitos" : "Mis tareas",
+    project: "El Proyecto Familiar Cooperativo",
     pet: parent ? "Mascotas virtuales 8-bits" : "Mi Mascota Virtual 8-bits",
     rewards: "Momentos que ilusionan",
     requests: parent ? "Un poco de tu atención" : "Mis peticiones",
     family: "Cada camino es diferente",
     advice: parent ? "Educar en positivo" : "Ideas que me ayudan",
+    faq: "Preguntas Frecuentes y Guía",
     settings: "A vuestra manera",
   };
   const subtitle = {
@@ -1697,6 +1773,7 @@ export function Portal({ snapshot }: { snapshot: Snapshot }) {
       ? "Un vistazo a los pequeños grandes avances de tu familia."
       : "Este es tu espacio. Un pequeño paso cada vez.",
     tasks: "Compromisos claros, alcanzables y acordados juntos.",
+    project: "Construimos juntos la cabaña 8-bits: cada tarea completada aporta madera al reto común.",
     pet: parent
       ? "Cuida y evoluciona las mascotas virtuales en estilo Tamagotchi retro."
       : "Tu compañero de aventuras crece y evoluciona con tu esfuerzo diario.",
@@ -1704,6 +1781,7 @@ export function Portal({ snapshot }: { snapshot: Snapshot }) {
     requests: "Un momento para revisar juntos lo que habéis acordado.",
     family: "Cada hijo tiene sus propios objetivos y su propio ritmo.",
     advice: "Ideas basadas en evidencia para acompañar su crecimiento.",
+    faq: "Guía completa de funcionamiento, almacenamiento, rutinas y acuerdos familiares.",
     settings: "Personaliza el funcionamiento del sistema familiar.",
   };
   const go = (target: View) => {
@@ -1784,7 +1862,32 @@ export function Portal({ snapshot }: { snapshot: Snapshot }) {
               <span className="crumb-divider">/</span>
               <strong>{nav.find((n) => n.view === view)?.label}</strong>
             </span>
-            <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <button
+                type="button"
+                onClick={() => {
+                  const next = toggleSoundMuted();
+                  setSoundMuted(next);
+                  if (!next) playTap();
+                }}
+                style={{
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid var(--edge)",
+                  borderRadius: 8,
+                  padding: "5px 9px",
+                  color: soundMuted ? "var(--muted)" : "var(--green)",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  fontSize: 11,
+                  fontWeight: 650,
+                }}
+                title={soundMuted ? "Activar efectos retro 8-bits" : "Silenciar efectos"}
+              >
+                <Icon name={soundMuted ? "mute" : "sound"} size={14} />
+                <span>{soundMuted ? "Mute" : "8-Bit"}</span>
+              </button>
               <span className="private-tag">
                 <i />
                 Espacio privado
@@ -1824,7 +1927,13 @@ export function Portal({ snapshot }: { snapshot: Snapshot }) {
                 <p className="notice success">{state.message}</p>
               ) : null}
             </div>
-            {view === "home" && <Dashboard snapshot={snapshot} go={go} />}
+            {view === "home" && (
+              <Dashboard
+                snapshot={snapshot}
+                go={go}
+                onStartRoutine={(child) => setActiveRoutineChild(child)}
+              />
+            )}
             {view === "tasks" && (
               <TaskBoard
                 snapshot={snapshot}
@@ -1832,11 +1941,15 @@ export function Portal({ snapshot }: { snapshot: Snapshot }) {
                 pending={pending}
               />
             )}
+            {view === "project" && (
+              <FamilyProjectView family={snapshot.family} user={snapshot.user} />
+            )}
             {view === "pet" && <PetView snapshot={snapshot} />}
             {view === "rewards" && <Rewards snapshot={snapshot} />}
             {view === "requests" && <Requests snapshot={snapshot} />}
             {view === "family" && parent && <FamilyView snapshot={snapshot} />}
             {view === "advice" && <Advice parent={parent} />}
+            {view === "faq" && <FAQView onNavigate={(route) => go(route as View)} />}
             {view === "settings" && parent && <Settings snapshot={snapshot} />}
             <footer className="page-footer">
               <span>
@@ -1848,6 +1961,22 @@ export function Portal({ snapshot }: { snapshot: Snapshot }) {
           </main>
         </div>
       </div>
+
+      {activeRoutineChild && (
+        <RoutineRunner
+          family={snapshot.family}
+          child={activeRoutineChild}
+          today={snapshot.today}
+          onCompleteTask={(taskId, childId) => {
+            const form = new FormData();
+            form.set("operation", "complete-task");
+            form.set("id", taskId);
+            form.set("childId", childId);
+            action(form);
+          }}
+          onClose={() => setActiveRoutineChild(null)}
+        />
+      )}
     </FormContext>
   );
 }

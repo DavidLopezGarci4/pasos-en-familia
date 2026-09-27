@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createUser, currentUser, openSession, closeSession, verifyLogin } from "@/lib/auth";
 import { readFamily, saveFamily, transaction, deleteUser } from "@/lib/db";
-import { InputError, requireThat, text, integer, findChild, addPoints, submitTask, reviewRequest, editTask, deleteTask, editReward, deleteReward, feedPet, playPet, buyPetItem, togglePetAccessory, resetChild, deleteChild } from "@/lib/domain";
+import { InputError, requireThat, text, integer, findChild, addPoints, submitTask, reviewRequest, editTask, deleteTask, editReward, deleteReward, feedPet, playPet, buyPetItem, togglePetAccessory, resetChild, deleteChild, createFamilyProject } from "@/lib/domain";
 import { dayKey, taskLibrary, type ActionResult, type Family } from "@/lib/model";
 import { eventBus } from "@/lib/events";
 
@@ -252,6 +252,16 @@ export async function mutate(_previous: ActionResult, form: FormData): Promise<A
             active: true,
             completedAt: null,
           });
+          break;
+        }
+
+        case "add-project": {
+          createFamilyProject(family, {
+            title: text(form, "titulo", 120),
+            description: String(form.get("descripcion") || "").slice(0, 300),
+            rewardTitle: text(form, "premio", 120),
+            targetPoints: integer(form, "puntos", 5, 1000),
+          }, actor);
           break;
         }
 

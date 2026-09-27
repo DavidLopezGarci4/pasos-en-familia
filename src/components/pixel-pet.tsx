@@ -6,6 +6,7 @@ type PixelPetProps = {
   accessories?: string[];
   size?: number;
   className?: string;
+  mood?: "happy" | "sleepy" | "celebrating" | "normal";
 };
 
 // Helper to render pixel rectangles on a 24x24 grid
@@ -13,7 +14,7 @@ function Px({ x, y, w = 1, h = 1, c }: { x: number; y: number; w?: number; h?: n
   return <rect x={x} y={y} width={w} height={h} fill={c} />;
 }
 
-export function PixelPet({ type, stage, accessories = [], size = 96, className = "" }: PixelPetProps) {
+export function PixelPet({ type, stage, accessories = [], size = 96, className = "", mood = "normal" }: PixelPetProps) {
   // Palettes per pet type
   const palettes: Record<string, { primary: string; secondary: string; dark: string; light: string; eye: string; accent: string }> = {
     fox: { primary: "#d95f02", secondary: "#f7f7f7", dark: "#252525", light: "#ffa767", eye: "#1f2937", accent: "#b33f00" },
@@ -34,6 +35,30 @@ export function PixelPet({ type, stage, accessories = [], size = 96, className =
       shapeRendering="crispEdges"
       style={{ imageRendering: "pixelated" }}
     >
+      {/* Sleepy Zzz overlay */}
+      {mood === "sleepy" && (
+        <g id="sleepy-overlay">
+          <Px x={17} y={3} w={3} h={1} c="#93c5fd" />
+          <Px x={18} y={4} w={1} h={1} c="#93c5fd" />
+          <Px x={17} y={5} w={3} h={1} c="#93c5fd" />
+          <Px x={20} y={1} w={3} h={1} c="#60a5fa" />
+          <Px x={21} y={2} w={1} h={1} c="#60a5fa" />
+          <Px x={20} y={3} w={3} h={1} c="#60a5fa" />
+        </g>
+      )}
+
+      {/* Celebrating Sparkles overlay */}
+      {mood === "celebrating" && (
+        <g id="celebrate-overlay">
+          <Px x={2} y={5} w={1} h={1} c="#fde047" />
+          <Px x={1} y={6} w={3} h={1} c="#fde047" />
+          <Px x={2} y={7} w={1} h={1} c="#fde047" />
+          <Px x={21} y={7} w={1} h={1} c="#fde047" />
+          <Px x={20} y={8} w={3} h={1} c="#fde047" />
+          <Px x={21} y={9} w={1} h={1} c="#fde047" />
+        </g>
+      )}
+
       {/* 1. STAGE: EGG */}
       {stage === "egg" && (
         <g id="egg-stage">

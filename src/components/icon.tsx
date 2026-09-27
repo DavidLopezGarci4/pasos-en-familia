@@ -18,6 +18,9 @@ export function Icon({ name, size = 20 }: { name: string; size?: number }) {
     fire: <><path d="M8.5 14.5A2.5 2.5 0 0 0 11 17c1.38 0 2.5-1.12 2.5-2.5 0-.69-.28-1.31-.73-1.77L12 12l-.77.73c-.45.46-.73 1.08-.73 1.77z"/><path d="M12 2c0 3-2 5-4 7.5C6 12 5 14 5 16.5A7 7 0 0 0 19 16.5c0-4-3-6-4.5-8.5C13 6 13 4 12 2z"/></>,
     pet: <><path d="M12 13c-2.5 0-5 1.5-5 3.5 0 1.5 1.5 2.5 5 2.5s5-1 5-2.5c0-2-2.5-3.5-5-3.5z"/><circle cx="7" cy="9" r="2"/><circle cx="17" cy="9" r="2"/><circle cx="10" cy="5" r="1.5"/><circle cx="14" cy="5" r="1.5"/></>,
     sword: <><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l2 2M19 13l2 2M16 16l4 4"/></>,
+    tree: <><path d="M12 2L4 14h5v6h6v-6h5L12 2z"/><line x1="12" y1="20" x2="12" y2="24"/></>,
+    sound: <><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></>,
+    mute: <><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></>,
   };
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name] || paths.spark}</svg>;
 }

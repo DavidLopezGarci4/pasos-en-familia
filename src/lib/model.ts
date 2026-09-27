@@ -32,6 +32,19 @@ export type Entry = { id: string; childId: string; title: string; delta: number;
 export type Message = { id: string; childId: string; text: string; by: string; at: string };
 export type Quest = { id: string; title: string; target: number; progress: number; rewardText: string; active: boolean; completedAt: string | null };
 
+export interface FamilyProject {
+  id: string;
+  title: string;
+  description: string;
+  rewardTitle: string;
+  targetPoints: number;
+  currentPoints: number;
+  active: boolean;
+  contributions: { memberId: string; memberName: string; points: number }[];
+  startedAt: string;
+  completedAt?: string;
+}
+
 export type Family = {
   name: string;
   settings: { negativeEnabled: boolean; acceptable: number; target: number; timezone: string };
@@ -42,6 +55,7 @@ export type Family = {
   entries: Entry[];
   messages: Message[];
   quests: Quest[];
+  projects?: FamilyProject[];
 };
 export type Snapshot = { family: Family; user: Member; members: Member[]; today: string };
 export type ActionResult = { error?: string; message?: string };

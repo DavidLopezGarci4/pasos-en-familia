@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { Child, Family, Member, Request, Task, taskChildIds, taskRequest, dayKey, xpForLevel, petStageFor, petItemsCatalog } from "./model";
+import { Child, Family, Member, Request, Task, FamilyProject, taskChildIds, taskRequest, dayKey, xpForLevel, petStageFor, petItemsCatalog } from "./model";
 
 
 
@@ -54,6 +54,79 @@ export function advanceQuests(family: Family) {
   }
 }
 
+/** Contribute points to the active family project when a task is completed. */
+export function contributeToProject(family: Family, points: number, contributorId?: string): boolean {
+  if (!family.projects) {
+    family.projects = [];
+  }
+  let project = family.projects.find((p) => p.active && !p.completedAt);
+  if (!project && family.projects.length === 0) {
+    project = {
+      id: "proj-" + randomUUID(),
+      title: "Construir la Cabaña del Árbol 8-Bits",
+      description: "Cada rutina y tarea que completamos aporta un ladrillo de madera a nuestro proyecto compartido.",
+      rewardTitle: "Tarde de cine y pizza casera en familia",
+      targetPoints: 60,
+      currentPoints: 0,
+      active: true,
+      contributions: [],
+      startedAt: new Date().toISOString(),
+    };
+    family.projects.push(project);
+  }
+  if (!project || points <= 0) return false;
+
+  project.currentPoints = Math.min(project.targetPoints, project.currentPoints + points);
+  let completed = false;
+  if (project.currentPoints >= project.targetPoints && !project.completedAt) {
+    project.completedAt = new Date().toISOString();
+    completed = true;
+  }
+
+  if (contributorId) {
+    if (!project.contributions) project.contributions = [];
+    let contrib = project.contributions.find((c) => c.memberId === contributorId);
+    if (!contrib) {
+      const child = family.children.find((c) => c.id === contributorId);
+      contrib = {
+        memberId: contributorId,
+        memberName: child ? child.name : "Familiar",
+        points: 0,
+      };
+      project.contributions.push(contrib);
+    }
+    contrib.points += points;
+  }
+  return completed;
+}
+
+export function createFamilyProject(
+  family: Family,
+  data: { title: string; description: string; rewardTitle: string; targetPoints: number },
+  actor: Member
+) {
+  requireThat(actor.role === "parent", "Solo los padres pueden crear proyectos familiares.");
+  requireThat(data.title.trim().length > 0 && data.title.length <= 120, "El título debe tener entre 1 y 120 caracteres.");
+  requireThat(data.targetPoints >= 5 && data.targetPoints <= 1000, "Los puntos objetivo deben estar entre 5 y 1000.");
+  if (!family.projects) family.projects = [];
+  family.projects.forEach((p) => {
+    if (!p.completedAt) p.active = false;
+  });
+  const newProject: FamilyProject = {
+    id: "proj-" + randomUUID(),
+    title: data.title.trim(),
+    description: (data.description || "Un proyecto cooperativo en familia.").trim(),
+    rewardTitle: (data.rewardTitle || "Celebración familiar").trim(),
+    targetPoints: data.targetPoints,
+    currentPoints: 0,
+    active: true,
+    contributions: [],
+    startedAt: new Date().toISOString(),
+  };
+  family.projects.unshift(newProject);
+  return newProject;
+}
+
 export function addPoints(family: Family, child: Child, delta: number, title: string, actor: Member) {
   requireThat(actor.role === "parent", "Solo los padres pueden modificar los puntos.");
   requireThat(Number.isInteger(delta) && delta !== 0 && Math.abs(delta) <= 100, "El ajuste debe ser un entero entre -100 y 100, distinto de cero.");
@@ -92,6 +165,7 @@ export function reviewRequest(family: Family, id: string, status: "approved" | "
     if (status === "approved" && request.kind === "task") {
       addPoints(family, child, request.points, request.title, actor);
       advanceQuests(family);
+      contributeToProject(family, request.points, request.childId);
       addPetEnergy(child, 1);
     }
     if (status === "approved" && request.kind === "reward") {
